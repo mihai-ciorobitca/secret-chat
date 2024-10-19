@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index Page</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script> 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <input type="text" id="message">
+    <input type="button" id="send" value="Send">
+    <div id="messages" style="height: 400px; overflow-y: scroll">
+        {% for message in messages[::-1] %}
+            <p>{{message.sender}}: {{ message.message }}</p>
+        {% endfor %}
+    </div>
+
+    <script>
+        const socket = io();
+        const $text = $('#message');
+        const $send = $('#send');
+
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+            console.log("connected");
+        });
+
+        socket.on('disconnect', function() {
+            socket.emit('my event', {data: 'I\'m disconnected!'});
+            console.log("disconnected");
+        });
+
+        $send.on('click', () => {
+            socket.emit('message', $text.val());
+            $text.val('');
+        });
+
+        $text.on('keypress', (e) => {
+            if (e.keyCode === 13) {
+                socket.emit('message', $text.val());
+                $text.val('');
+            }
+        });
+
+        socket.on('message', (data) => {
+            const $messages = $('#messages');
+            const $p = $('<p>').html(`${data.sender}: ${data.message}`);
+            $messages.prepend($p);
+        });
+    </script>
+</body>
+</html>
+
